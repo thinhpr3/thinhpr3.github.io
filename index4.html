@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Tiếng Việt Lớp 2 - Chọn loại từ</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #eef6ff;
+    text-align: center;
+    padding: 20px;
+}
+
+h1 { color: #2c7be5; }
+
+.box {
+    background: white;
+    padding: 20px;
+    border-radius: 15px;
+    max-width: 650px;
+    margin: auto;
+    box-shadow: 0 0 10px rgba(0,0,0,0.15);
+}
+
+button {
+    padding: 10px;
+    width: 100%;
+    margin: 6px 0;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    color: white;
+    cursor: pointer;
+}
+
+/* Màu theo loại từ */
+.suvat { background: #3498db; }
+.hoatdong { background: #2ecc71; }
+.tinhcach { background: #9b59b6; }
+.camxuc { background: #f1c40f; color: black; }
+.dacdiem { background: #e74c3c; }
+
+#result { font-weight: bold; margin-top: 10px; }
+#explain { margin-top: 8px; font-style: italic; }
+#score { margin-top: 8px; }
+
+select {
+    padding: 8px;
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<h1>📘 Tiếng Việt Lớp 2</h1>
+
+<select id="topicSelect" onchange="startGame()" style="display:none">
+    <option value="all">🔄 Tất cả chủ đề</option>
+    <option value="sự vật">🔵 Sự vật</option>
+    <option value="hoạt động">🟢 Hoạt động</option>
+    <option value="tính cách">🟣 Tính cách</option>
+    <option value="cảm xúc">🟡 Cảm xúc</option>
+    <option value="đặc điểm">🔴 Đặc điểm</option>
+</select>
+
+<div class="box">
+    <p id="progress"></p>
+    
+        <p id="score"></p>
+        
+    <h2 id="word"></h2>
+
+    <button class="suvat" onclick="check('sự vật')">Sự vật</button>
+    <button class="hoatdong" onclick="check('hoạt động')">Hoạt động</button>
+    <button class="tinhcach" onclick="check('tính cách')">Tính cách</button>
+    <button class="camxuc" onclick="check('cảm xúc')">Cảm xúc</button>
+    <button class="dacdiem" onclick="check('đặc điểm')">Đặc điểm</button>
+
+    <p id="result"></p>
+    <p id="explain"></p>
+
+</div>
+
+<script>
+/* ================= 50 CÂU HỎI LỚP 2 ================= */
+const allQuestions = [
+
+/* ================= SỰ VẬT (20) ================= */
+{word:"con mèo", type:"sự vật", explain:"Con mèo là con vật."},
+{word:"con chó", type:"sự vật", explain:"Con chó là con vật."},
+{word:"con gà", type:"sự vật", explain:"Con gà là con vật."},
+{word:"cái bàn", type:"sự vật", explain:"Cái bàn là đồ vật."},
+{word:"cái ghế", type:"sự vật", explain:"Cái ghế là đồ dùng."},
+{word:"quyển sách", type:"sự vật", explain:"Quyển sách là đồ dùng học tập."},
+{word:"cái bút", type:"sự vật", explain:"Cái bút là đồ dùng học tập."},
+{word:"cái cặp", type:"sự vật", explain:"Cái cặp là đồ dùng đi học."},
+{word:"ngôi nhà", type:"sự vật", explain:"Ngôi nhà là nơi để ở."},
+{word:"trường học", type:"sự vật", explain:"Trường học là nơi học tập."},
+{word:"bông hoa", type:"sự vật", explain:"Bông hoa là cây cối."},
+{word:"cây bút chì", type:"sự vật", explain:"Bút chì là đồ dùng học tập."},
+{word:"xe đạp", type:"sự vật", explain:"Xe đạp là phương tiện."},
+{word:"xe máy", type:"sự vật", explain:"Xe máy là phương tiện."},
+{word:"cái tủ", type:"sự vật", explain:"Cái tủ là đồ dùng trong nhà."},
+{word:"cái giường", type:"sự vật", explain:"Cái giường là đồ dùng."},
+{word:"đồng hồ", type:"sự vật", explain:"Đồng hồ là đồ dùng xem giờ."},
+{word:"cái quạt", type:"sự vật", explain:"Cái quạt là đồ dùng."},
+{word:"cái nón", type:"sự vật", explain:"Cái nón là đồ dùng."},
+{word:"cái áo", type:"sự vật", explain:"Cái áo là đồ mặc."},
+
+/* ================= HOẠT ĐỘNG (20) ================= */
+{word:"chạy", type:"hoạt động", explain:"Chạy là việc làm."},
+{word:"nhảy", type:"hoạt động", explain:"Nhảy là hoạt động."},
+{word:"đi bộ", type:"hoạt động", explain:"Đi bộ là việc làm."},
+{word:"đọc sách", type:"hoạt động", explain:"Đọc sách là việc làm."},
+{word:"viết bài", type:"hoạt động", explain:"Viết bài là việc học tập."},
+{word:"ăn cơm", type:"hoạt động", explain:"Ăn cơm là việc làm hằng ngày."},
+{word:"uống nước", type:"hoạt động", explain:"Uống nước là việc làm."},
+{word:"học bài", type:"hoạt động", explain:"Học bài là việc của học sinh."},
+{word:"quét nhà", type:"hoạt động", explain:"Quét nhà là việc làm."},
+{word:"lau bàn", type:"hoạt động", explain:"Lau bàn là việc làm."},
+{word:"chơi bóng", type:"hoạt động", explain:"Chơi bóng là hoạt động vui chơi."},
+{word:"đá cầu", type:"hoạt động", explain:"Đá cầu là hoạt động."},
+{word:"nghe nhạc", type:"hoạt động", explain:"Nghe nhạc là hoạt động."},
+{word:"xem tivi", type:"hoạt động", explain:"Xem tivi là việc làm."},
+{word:"vẽ tranh", type:"hoạt động", explain:"Vẽ tranh là việc làm."},
+{word:"tưới cây", type:"hoạt động", explain:"Tưới cây là việc làm."},
+{word:"rửa tay", type:"hoạt động", explain:"Rửa tay là việc làm."},
+{word:"đánh răng", type:"hoạt động", explain:"Đánh răng là việc làm."},
+{word:"gấp quần áo", type:"hoạt động", explain:"Gấp quần áo là việc làm."},
+{word:"đi học", type:"hoạt động", explain:"Đi học là hoạt động."},
+
+/* ================= TÍNH CÁCH (20) ================= */
+{word:"ngoan ngoãn", type:"tính cách", explain:"Ngoan ngoãn nói về tính nết."},
+{word:"chăm chỉ", type:"tính cách", explain:"Chăm chỉ là tính cách tốt."},
+{word:"thật thà", type:"tính cách", explain:"Thật thà nói về con người."},
+{word:"lễ phép", type:"tính cách", explain:"Lễ phép là tính nết ngoan."},
+{word:"hiền lành", type:"tính cách", explain:"Hiền lành là tính cách tốt."},
+{word:"dũng cảm", type:"tính cách", explain:"Dũng cảm là không sợ khó."},
+{word:"siêng năng", type:"tính cách", explain:"Siêng năng là hay làm việc."},
+{word:"tốt bụng", type:"tính cách", explain:"Tốt bụng là biết giúp người khác."},
+{word:"vâng lời", type:"tính cách", explain:"Vâng lời là biết nghe lời."},
+{word:"nhút nhát", type:"tính cách", explain:"Nhút nhát là hay sợ."},
+{word:"lười biếng", type:"tính cách", explain:"Lười biếng là không chăm làm."},
+{word:"thân thiện", type:"tính cách", explain:"Thân thiện là dễ gần."},
+{word:"vui tính", type:"tính cách", explain:"Vui tính là hay cười."},
+{word:"cẩn thận", type:"tính cách", explain:"Cẩn thận là làm việc kỹ."},
+{word:"tự tin", type:"tính cách", explain:"Tự tin là tin vào mình."},
+{word:"kiên trì", type:"tính cách", explain:"Kiên trì là không bỏ cuộc."},
+{word:"nhiệt tình", type:"tính cách", explain:"Nhiệt tình là hay giúp đỡ."},
+{word:"khiêm tốn", type:"tính cách", explain:"Khiêm tốn là không khoe khoang."},
+{word:"trung thực", type:"tính cách", explain:"Trung thực là không nói dối."},
+{word:"dễ thương", type:"tính cách", explain:"Dễ thương là được yêu mến."},
+
+/* ================= CẢM XÚC (20) ================= */
+{word:"vui vẻ", type:"cảm xúc", explain:"Vui vẻ là cảm xúc khi vui."},
+{word:"buồn", type:"cảm xúc", explain:"Buồn là cảm xúc không vui."},
+{word:"lo lắng", type:"cảm xúc", explain:"Lo lắng là cảm xúc trong lòng."},
+{word:"sợ hãi", type:"cảm xúc", explain:"Sợ hãi là cảm xúc khi gặp nguy hiểm."},
+{word:"hạnh phúc", type:"cảm xúc", explain:"Hạnh phúc là cảm xúc rất vui."},
+{word:"tức giận", type:"cảm xúc", explain:"Tức giận là cảm xúc không hài lòng."},
+{word:"xấu hổ", type:"cảm xúc", explain:"Xấu hổ là cảm xúc ngại ngùng."},
+{word:"ngạc nhiên", type:"cảm xúc", explain:"Ngạc nhiên là cảm xúc bất ngờ."},
+{word:"yêu thương", type:"cảm xúc", explain:"Yêu thương là cảm xúc tốt đẹp."},
+{word:"hồi hộp", type:"cảm xúc", explain:"Hồi hộp là cảm xúc chờ đợi."},
+{word:"thích thú", type:"cảm xúc", explain:"Thích thú là cảm xúc vui."},
+{word:"vui mừng", type:"cảm xúc", explain:"Vui mừng là cảm xúc vui."},
+{word:"căng thẳng", type:"cảm xúc", explain:"Căng thẳng là cảm xúc lo."},
+{word:"thất vọng", type:"cảm xúc", explain:"Thất vọng là cảm xúc buồn."},
+{word:"tự hào", type:"cảm xúc", explain:"Tự hào là cảm xúc vui."},
+{word:"nhớ nhung", type:"cảm xúc", explain:"Nhớ nhung là cảm xúc nhớ."},
+{word:"cảm động", type:"cảm xúc", explain:"Cảm động là cảm xúc xúc động."},
+{word:"vui sướng", type:"cảm xúc", explain:"Vui sướng là cảm xúc rất vui."},
+{word:"ngại ngùng", type:"cảm xúc", explain:"Ngại ngùng là cảm xúc xấu hổ."},
+{word:"bình tĩnh", type:"cảm xúc", explain:"Bình tĩnh là cảm xúc ổn định."},
+
+/* ================= ĐẶC ĐIỂM (20) ================= */
+{word:"cao", type:"đặc điểm", explain:"Cao nói về chiều cao."},
+{word:"thấp", type:"đặc điểm", explain:"Thấp nói về chiều cao."},
+{word:"to", type:"đặc điểm", explain:"To nói về kích thước."},
+{word:"nhỏ", type:"đặc điểm", explain:"Nhỏ nói về kích thước."},
+{word:"dài", type:"đặc điểm", explain:"Dài nói về độ dài."},
+{word:"ngắn", type:"đặc điểm", explain:"Ngắn nói về độ dài."},
+{word:"nhanh", type:"đặc điểm", explain:"Nhanh nói về tốc độ."},
+{word:"chậm", type:"đặc điểm", explain:"Chậm nói về tốc độ."},
+{word:"đẹp", type:"đặc điểm", explain:"Đẹp nói về hình dáng."},
+{word:"xấu", type:"đặc điểm", explain:"Xấu nói về hình dáng."},
+{word:"nặng", type:"đặc điểm", explain:"Nặng nói về cân nặng."},
+{word:"nhẹ", type:"đặc điểm", explain:"Nhẹ nói về cân nặng."},
+{word:"rộng", type:"đặc điểm", explain:"Rộng nói về kích thước."},
+{word:"hẹp", type:"đặc điểm", explain:"Hẹp nói về kích thước."},
+{word:"sạch", type:"đặc điểm", explain:"Sạch nói về trạng thái."},
+{word:"bẩn", type:"đặc điểm", explain:"Bẩn nói về trạng thái."},
+{word:"tròn", type:"đặc điểm", explain:"Tròn nói về hình dạng."},
+{word:"dài ngoằng", type:"đặc điểm", explain:"Dài ngoằng là rất dài."},
+{word:"thẳng", type:"đặc điểm", explain:"Thẳng nói về hình dáng."},
+{word:"cong", type:"đặc điểm", explain:"Cong nói về hình dáng."}
+];
+
+
+let questions = [];
+let index = 0;
+let score = 0;
+const total = 20; // mỗi lượt làm 20 câu (random)
+
+function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+}
+
+function startGame() {
+    const topic = document.getElementById("topicSelect").value;
+    questions = topic === "all"
+        ? [...allQuestions]
+        : allQuestions.filter(q => q.type === topic);
+
+    shuffle(questions);
+    questions = questions.slice(0, total);
+
+    index = 0;
+    score = 0;
+    showQuestion();
+}
+
+function showQuestion() {
+    document.getElementById("word").innerText = questions[index].word;
+    document.getElementById("progress").innerText =
+        `Câu ${index+1} / ${questions.length}`;
+    document.getElementById("result").innerText = "";
+    document.getElementById("explain").innerText = "";
+    document.getElementById("score").innerText = `Điểm: ${score}`;
+}
+
+function check(choice) {
+    if (choice === questions[index].type) {
+        score++;
+        document.getElementById("result").innerText = "✅ Đúng rồi!";
+        document.getElementById("result").style.color = "green";
+    } else {
+        document.getElementById("result").innerText = "❌ Sai rồi!";
+        document.getElementById("result").style.color = "red";
+    }
+
+    document.getElementById("explain").innerText =
+        questions[index].explain;
+
+    setTimeout(() => {
+        index++;
+        if (index < questions.length) showQuestion();
+        else endGame();
+    }, 5000);
+}
+
+function endGame() {
+    document.querySelector(".box").innerHTML = `
+        <h2>🎉 Hoàn thành</h2>
+        <p>Điểm của em: <b>${score}/${questions.length}</b></p>
+        <button onclick="location.reload()">Làm lại</button>
+    `;
+}
+
+startGame();
+</script>
+
+</body>
+</html>
