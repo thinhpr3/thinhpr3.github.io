@@ -27,15 +27,12 @@
             -webkit-tap-highlight-color: transparent;
         }
         
-        /* Login Screen */
         #lock-screen { position: fixed; inset: 0; background: var(--dark); z-index: 3000; display: flex; justify-content: center; align-items: center; }
         .login-box { width: 320px; padding: 30px; background: var(--card); border-radius: 20px; border: 1px solid var(--border); text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
         
-        /* Container & Header */
         .container { max-width: 1000px; margin: auto; }
         .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 12px; margin-bottom: 20px; }
         
-        /* Inputs */
         input, select, textarea { 
             background: #0f172a; border: 1px solid #334155; color: white; padding: 12px; 
             border-radius: 10px; width: 100%; box-sizing: border-box; margin-bottom: 12px; outline: none; transition: 0.3s; font-size: 14px;
@@ -49,7 +46,6 @@
         .btn-save:active { transform: scale(0.98); }
         .btn-save:disabled { opacity: 0.6; cursor: not-allowed; }
         
-        /* Professional Table */
         .table-container { 
             margin-top: 15px; border: 1px solid var(--border); border-radius: 12px; 
             overflow-x: auto; background: var(--card); box-shadow: 0 4px 20px rgba(0,0,0,0.3); 
@@ -65,10 +61,7 @@
 
         .badge-tech { background: rgba(58, 123, 213, 0.2); color: #93c5fd; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; white-space: nowrap; }
         .badge-mec { background: rgba(58, 123, 213, 0.2); color: #93c5ff; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; white-space: nowrap; }
-        .badge-sup { background: rgba(58, 123, 213, 0.2); color: #93c5dd; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; white-space: nowrap; }
-        .badge-user { color: var(--text-muted); font-size: 11px; font-family: monospace; }
 
-        /* Modals */
         .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center; backdrop-filter: blur(4px); padding: 20px; }
         .modal-content { 
             background: var(--card); width: 95%; max-width: 600px; border-radius: 20px; border: 1px solid var(--primary); 
@@ -87,7 +80,6 @@
         .btn-toggle-form { background: rgba(0, 210, 255, 0.05); color: var(--primary); border: 1px dashed var(--primary); padding: 12px; width: 100%; border-radius: 10px; margin-bottom: 15px; cursor: pointer; font-weight: 600; }
         #searchBox { border: 1px solid var(--primary); background: rgba(0, 210, 255, 0.05); margin-top: 10px; }
 
-        /* Thanh tiến trình chạy ở đỉnh đầu */
         #top-progress {
             position: fixed; top: 0; left: 0; height: 3px;
             background: linear-gradient(to right, var(--primary), #fff);
@@ -95,7 +87,6 @@
             box-shadow: 0 0 10px var(--primary);
         }
 
-        /* Lớp phủ mờ giữa màn hình khi đang lưu */
         #loading-overlay {
             position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8);
             backdrop-filter: blur(5px); z-index: 4000; display: none;
@@ -109,7 +100,6 @@
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-        /* Toast notifications */
         #toast-container {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             z-index: 10000; display: flex; flex-direction: column; align-items: center; pointer-events: none;
@@ -225,12 +215,20 @@
     </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.19.0/js/md5.min.js"></script>
 <script>
     const GOOGLE_URL = 'https://script.google.com/macros/s/AKfycbynKdylaJX6JCuPJ_4roEAppNco5cHcFBtTj1AlXwxOp1AL3-3wyYSOqIu-nPrqbLJz/exec'; 
     let AUTH = JSON.parse(localStorage.getItem('tech_auth_v4')) || null;
     let USER_ROLE = "VIEWER";
     window.currentLogs = [];
+
+    // Hàm mã hóa SHA-256 thuần khớp chính xác với GAS Utilities.ComputeDigest(Utilities.DigestAlgorithm.SHA_256)
+    async function sha256(message) {
+        const msgBuffer = new TextEncoder().encode(message);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        return hashHex;
+    }
 
     document.addEventListener("DOMContentLoaded", () => {
         setInitialDate();
@@ -259,9 +257,12 @@
         showLoading(true, "ĐANG XÁC THỰC...");
 
         try {
+            // Mã hóa mật khẩu sang SHA-256 trước khi gửi lên GAS
+            const hashedPass = await sha256(p);
+
             const res = await fetch(GOOGLE_URL, {
                 method: 'POST',
-                body: JSON.stringify({ action: "FETCH_DATA", user: u, pass: md5(p) })
+                body: JSON.stringify({ action: "FETCH_DATA", user: u, pass: hashedPass })
             });
             const text = await res.text();
             showLoading(false);
@@ -271,7 +272,7 @@
             } else {
                 const data = JSON.parse(text);
                 USER_ROLE = data.role;
-                AUTH = { user: u, pass: md5(p), expire: new Date().getTime() + (24 * 60 * 60 * 1000) };
+                AUTH = { user: u, pass: hashedPass, expire: new Date().getTime() + (24 * 60 * 60 * 1000) };
                 localStorage.setItem('tech_auth_v4', JSON.stringify(AUTH));
                 showApp();
                 renderData(data);
