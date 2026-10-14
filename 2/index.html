@@ -8,13 +8,9 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛠️</text></svg>">
     <style>
         :root { 
-            --primary: #00d2ff; 
-            --secondary: #3a7bd5; 
-            --dark: #0f172a; 
-            --card: #1e293b; 
-            --border: rgba(255,255,255,0.1);
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
+            --primary: #00d2ff; --secondary: #3a7bd5; --dark: #0f172a; 
+            --card: #1e293b; --border: rgba(255,255,255,0.1);
+            --text-main: #f8fafc; --text-muted: #94a3b8;
         }
 
         body { 
@@ -43,6 +39,14 @@
         
         .btn-danger { background: linear-gradient(45deg, #ef4444, #b91c1c); color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: 600; width: 100%; }
         .btn-warning { background: linear-gradient(45deg, #f59e0b, #d97706); color: white; border: none; padding: 12px; border-radius: 10px; cursor: pointer; font-weight: 600; width: 100%; }
+
+        /* Multi-select dropdown custom */
+        .dropdown-container { position: relative; margin-bottom: 12px; }
+        .dropdown-select-btn { background: #0f172a; border: 1px solid #334155; color: white; padding: 12px; border-radius: 10px; width: 100%; box-sizing: border-box; text-align: left; cursor: pointer; font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
+        .dropdown-list { display: none; position: absolute; top: 100%; left: 0; right: 0; background: var(--card); border: 1px solid var(--primary); border-radius: 10px; max-height: 180px; overflow-y: auto; z-index: 1000; padding: 8px; margin-top: 4px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+        .dropdown-item { display: flex; align-items: center; gap: 8px; padding: 8px; font-size: 13px; cursor: pointer; border-radius: 6px; }
+        .dropdown-item:hover { background: rgba(0, 210, 255, 0.1); }
+        .dropdown-item input { width: auto; margin: 0; cursor: pointer; }
 
         .table-container { 
             margin-top: 15px; border: 1px solid var(--border); border-radius: 12px; 
@@ -78,18 +82,9 @@
         .btn-toggle-form { background: rgba(0, 210, 255, 0.05); color: var(--primary); border: 1px dashed var(--primary); padding: 12px; width: 100%; border-radius: 10px; margin-bottom: 15px; cursor: pointer; font-weight: 600; }
         #searchBox { border: 1px solid var(--primary); background: rgba(0, 210, 255, 0.05); margin-top: 10px; }
 
-        #top-progress {
-            position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(to right, var(--primary), #fff);
-            z-index: 9999; transition: width 0.3s; width: 0%; display: none; box-shadow: 0 0 10px var(--primary);
-        }
-        #loading-overlay {
-            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(5px);
-            z-index: 4000; display: none; flex-direction: column; justify-content: center; align-items: center;
-        }
-        .spinner {
-            width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--primary);
-            border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px;
-        }
+        #top-progress { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(to right, var(--primary), #fff); z-index: 9999; transition: width 0.3s; width: 0%; display: none; box-shadow: 0 0 10px var(--primary); }
+        #loading-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(5px); z-index: 4000; display: none; flex-direction: column; justify-content: center; align-items: center; }
+        .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.1); border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         #toast-container { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10000; display: flex; flex-direction: column; align-items: center; pointer-events: none; }
@@ -146,12 +141,21 @@
         <input type="text" id="workDateDisplay" readonly onclick="document.getElementById('dateModal').style.display='flex'">
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
             <select id="customer"><option value="">Tải khách hàng...</option></select>
-            <select id="techName"><option value="">Tải kỹ thuật...</option></select>
+            
+            <!-- Multi-select Kỹ thuật cho form tạo mới -->
+            <div class="dropdown-container">
+                <div class="dropdown-select-btn" onclick="toggleDropdown('techDropdownList')">
+                    <span id="techSelectLabel">-- Chọn kỹ thuật --</span> ▾
+                </div>
+                <div id="techDropdownList" class="dropdown-list"></div>
+            </div>
         </div>
+
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
             <select id="machineType"><option value="">-- Loại máy --</option></select>
             <select id="supportType"><option value="">-- Hỗ trợ --</option></select>
         </div>
+
         <textarea id="content" placeholder="Mô tả công việc thực hiện (Bắt buộc)..." style="height:100px"></textarea>
         <input type="text" id="note" placeholder="Ghi chú thêm (Không bắt buộc)...">
         <button class="btn-action" id="btnSave" onclick="saveData()">LƯU BÁO CÁO</button>
@@ -177,7 +181,7 @@
     </div>
 </div>
 
-<!-- Modal Chi tiết kèm Sửa/Xóa dành riêng cho Admin -->
+<!-- Modal Chi tiết kèm Sửa/Xóa -->
 <div id="infoModal" class="modal" onclick="if(event.target==this) closeInfoModal()">
     <div class="modal-content">
         <h3 id="modalTitle" style="color:var(--primary); text-align:center; margin:0 0 15px 0">CHI TIẾT 🔎</h3>
@@ -204,7 +208,7 @@
     let USER_ROLE = "VIEWER";
     window.currentLogs = [];
     window.globalDropdowns = { customers: [], techs: [], machineTypes: [], supports: [] };
-    let selectedRowIndex = null; // Lưu vị trí dòng thực tế trên Sheet
+    let selectedRowIndex = null; 
 
     async function sha256(message) {
         const msgBuffer = new TextEncoder().encode(message);
@@ -216,8 +220,27 @@
     document.addEventListener("DOMContentLoaded", () => {
         setInitialDate();
         checkSession();
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.dropdown-container')) {
+                document.querySelectorAll('.dropdown-list').forEach(el => el.style.display = 'none');
+            }
+        });
         document.getElementById('passInput').addEventListener("keypress", (e) => { if(e.key === "Enter") unlock(); });
     });
+
+    function toggleDropdown(id) {
+        const list = document.getElementById(id);
+        const isVisible = list.style.display === 'block';
+        document.querySelectorAll('.dropdown-list').forEach(el => el.style.display = 'none');
+        list.style.display = isVisible ? 'none' : 'block';
+    }
+
+    function updateTechLabel(containerId, labelId) {
+        const container = document.getElementById(containerId);
+        const checked = container.querySelectorAll('input[type="checkbox"]:checked');
+        const names = Array.from(checked).map(cb => cb.value);
+        document.getElementById(labelId).innerText = names.length > 0 ? names.join(', ') : '-- Chọn kỹ thuật --';
+    }
 
     function checkSession() {
         const now = new Date().getTime();
@@ -301,14 +324,16 @@
     async function saveData() {
         const d = document.getElementById('hiddenDate').value;
         const c = document.getElementById('customer').value;
-        const t = document.getElementById('techName').value;
         const m = document.getElementById('machineType').value;
         const s = document.getElementById('supportType').value;
         const n = document.getElementById('content').value.trim();
         const note = document.getElementById('note').value.trim();
         
+        const checkedTechs = document.querySelectorAll('#techDropdownList input[type="checkbox"]:checked');
+        const t = Array.from(checkedTechs).map(cb => cb.value).join(', ');
+
         if (!c || !n || !t || !m || !s) {
-            return showToast("Vui lòng điền đủ thông tin bắt buộc!", "error");
+            return showToast("Vui lòng điền đủ thông tin và chọn ít nhất 1 kỹ thuật!", "error");
         }
         
         const btn = document.getElementById('btnSave'); 
@@ -331,6 +356,8 @@
                 showToast("Đã lưu nhật ký thành công!", "success");
                 document.getElementById('content').value = ''; 
                 document.getElementById('note').value = '';
+                document.querySelectorAll('#techDropdownList input[type="checkbox"]').forEach(cb => cb.checked = false);
+                document.getElementById('techSelectLabel').innerText = '-- Chọn kỹ thuật --';
                 btn.disabled = false;
                 toggleForm();
                 refresh();
@@ -367,16 +394,23 @@
             };
 
             updateDropdown('customer', data.customers, 'Khách hàng');
-            updateDropdown('techName', data.techs, 'Kỹ thuật');
             updateDropdown('machineType', data.machineTypes, 'Loại máy');
             updateDropdown('supportType', data.supports, 'Hỗ trợ');
+
+            // Render danh sách checkbox cho kỹ thuật ở form tạo mới
+            const techList = document.getElementById('techDropdownList');
+            techList.innerHTML = data.techs.map(t => `
+                <label class="dropdown-item">
+                    <input type="checkbox" value="${t}" onchange="updateTechLabel('techDropdownList', 'techSelectLabel')"> ${t}
+                </label>
+            `).join('');
         }
 
-        // Lưu kèm theo chỉ số dòng thực tế trên Sheet (index + 2 vì dòng 1 là Header)
+        // Ánh xạ chính xác sheetRowIndex dựa trên cấu trúc trả về từ GAS (data.logs: dòng 0 là Header, từ dòng 1 là dữ liệu tương ứng sheet row 2 trở đi)
         window.currentLogs = data.logs.slice(1).map((row, idx) => ({
             rowValues: row,
-            sheetRowIndex: data.logs.length - 1 - idx // Do đang reverse mảng hiển thị
-        })).reverse(); // Đảo ngược để dòng mới nhất lên đầu
+            sheetRowIndex: idx + 2 // Chỉ số dòng thực tế trên Google Sheet
+        })).reverse(); 
 
         const html = window.currentLogs.map((item, index) => {
             const row = item.rowValues;
@@ -428,7 +462,6 @@
             </div>
         `;
 
-        // Nếu là ADMIN thì hiển thị các nút Sửa / Xóa
         const adminBtns = document.getElementById('adminActionButtons');
         if (USER_ROLE === "ADMIN") {
             adminBtns.style.display = "grid";
@@ -450,11 +483,20 @@
         if(!item) return;
         const row = item.rowValues;
 
-        // Chuyển modal thành form sửa dữ liệu
         document.getElementById('modalTitle').innerText = "CHỈNH SỬA BÁO CÁO ✍️";
         document.getElementById('adminActionButtons').style.display = "none";
 
         const makeOptions = (list, selectedVal) => list.map(i => `<option value="${i}" ${i === selectedVal ? 'selected' : ''}>${i}</option>`).join('');
+        const currentTechs = (row[6] || "").split(',').map(t => t.trim());
+
+        const techCheckboxesHtml = window.globalDropdowns.techs.map(t => {
+            const isChecked = currentTechs.includes(t) ? 'checked' : '';
+            return `
+                <label class="dropdown-item">
+                    <input type="checkbox" value="${t}" ${isChecked} onchange="updateTechLabel('editTechDropdownList', 'editTechSelectLabel')"> ${t}
+                </label>
+            `;
+        }).join('');
 
         document.getElementById('modalBody').innerHTML = `
             <div style="background:rgba(255,255,255,0.03); padding:15px; border-radius:12px; border:1px solid var(--border)">
@@ -470,8 +512,13 @@
                 <label style="font-size:11px; color:var(--text-muted)">Hình thức hỗ trợ:</label>
                 <select id="editSupport"><option value="">-- Chọn hỗ trợ --</option>${makeOptions(window.globalDropdowns.supports, row[4])}</select>
                 
-                <label style="font-size:11px; color:var(--text-muted)">Kỹ thuật thực hiện:</label>
-                <select id="editTech"><option value="">-- Chọn kỹ thuật --</option>${makeOptions(window.globalDropdowns.techs, row[6])}</select>
+                <label style="font-size:11px; color:var(--text-muted)">Kỹ thuật thực hiện (Có thể chọn nhiều):</label>
+                <div class="dropdown-container">
+                    <div class="dropdown-select-btn" onclick="toggleDropdown('editTechDropdownList')">
+                        <span id="editTechSelectLabel">${row[6] || '-- Chọn kỹ thuật --'}</span> ▾
+                    </div>
+                    <div id="editTechDropdownList" class="dropdown-list">${techCheckboxesHtml}</div>
+                </div>
                 
                 <label style="font-size:11px; color:var(--text-muted)">Nội dung công việc:</label>
                 <textarea id="editContent" style="height:80px">${row[5] || ''}</textarea>
@@ -489,12 +536,14 @@
         const c = document.getElementById('editCustomer').value;
         const m = document.getElementById('editMachine').value;
         const s = document.getElementById('editSupport').value;
-        const t = document.getElementById('editTech').value;
         const content = document.getElementById('editContent').value.trim();
         const note = document.getElementById('editNote').value.trim();
 
+        const checkedTechs = document.querySelectorAll('#editTechDropdownList input[type="checkbox"]:checked');
+        const t = Array.from(checkedTechs).map(cb => cb.value).join(', ');
+
         if(!c || !m || !s || !t || !content) {
-            return showToast("Vui lòng điền đủ thông tin bắt buộc!", "error");
+            return showToast("Vui lòng điền đủ thông tin và chọn ít nhất 1 kỹ thuật!", "error");
         }
 
         showLoading(true, "ĐANG CẬP NHẬT...");
